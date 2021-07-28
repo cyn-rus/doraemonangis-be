@@ -7,6 +7,14 @@ router.route('/').get((_req, res) => {
     .catch(err => res.status(400).json('Error: ' + err))
 })
 
+router.route('/:taste').get((req, res) => {
+  const taste = req.params.taste
+  taste.replace('%20', ' ')
+  Dorayaki.find({taste: taste})
+    .then(dorayaki => res.json(dorayaki))
+    .catch(err => res.status(400).json('Error: ' + err))
+})
+
 router.route('/add').post((req, res) => {
   const taste = req.body.taste
   const description = req.body.description

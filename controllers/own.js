@@ -1,4 +1,5 @@
 const router = require('express').Router()
+const Dorayaki = require('../models/dorayaki.model')
 const Own = require('../models/own.model')
 
 router.route('/').get((_req, res) => {
@@ -7,16 +8,42 @@ router.route('/').get((_req, res) => {
     .catch(err => res.status(400).json('Error: ' + err))
 })
 
+router.route('/get-qty/:name/:taste').get((req, res) => {
+  const name = req.params.name
+  const taste = req.params.taste
+    Own.findOne(
+      { name: name, taste: taste },
+      function (err, own) {
+        console.log(own)
+        if (err) {
+          res.status(400).json('Error: ' + err)
+        }
+        else {
+          if (own === null) res.json(0)
+          else res.json(own.qty)
+        }
+      }
+    )
+})
+
 router.route('/add').post((req, res) => {
   const name = req.body.name
   const taste = req.body.taste
   const qty = req.body.qty
 
-  Own.count({name: name, taste: taste}, function(_err, count) {
+  Own.countDocuments({name: name, taste: taste}, function(_err, count) {
     if (count > 0) {
-      Own.find({name: name, taste: taste})
-        .then(own => {
-          own.qty += qty
+      Own.findOneAndUpdate(
+        { name: name, taste: taste },
+        { '$set': { qty: Number(qty) } },
+        { useFindAndModify: false },
+        function (err, _msg) {
+          if (err) {
+            res.status(400).json('Error when adding own: ' + err)
+          }
+          else {
+            res.json('Own added!')
+          }
         })
     }
     else {
@@ -27,8 +54,8 @@ router.route('/add').post((req, res) => {
       })
 
       own.save()
-        .then(() => res.json('Own added!'))
-        .catch(err => res.status(400).json('Error: ' + err))
+        .then(() => res.json('New own added!'))
+        .catch(err => res.status(400).json('Error when creating new own: ' + err))
     }
   })
 })
@@ -85,7 +112,6 @@ router.route('/move').post((req, res) => {
   Own.countDocuments(
     { name: to, taste: taste },
     function(_err, count) {
-      console.log(count)
       if (count > 0) {
         Own.findOneAndUpdate(
           { name: to, taste: taste },

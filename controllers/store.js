@@ -26,24 +26,12 @@ router.route('/add').post((req, res) => {
     .catch(err => res.status(400).json('Error: ' + err))
 })
 
-router.route('/:id').get((req, res) => {
-  Store.findById(req.params.id)
-    .then(store => res.json(store))
-    .catch(err => res.status(400).json('Error: ' + err))
-})
-
 router.route('/:name').get((req, res) => {
   const name = req.params.name
   Store.find({name: name})
     .then(store => res.json(store))
     .catch(err => res.status(400).json('Error: ' + err))
 })
-
-// router.route('/:id').delete((req, res) => {
-//   Store.findByIdAndDelete(req.params.id)
-//     .then(() => res.json('Store deleted.'))
-//     .catch(err => res.status(400).json('Error: ' + err))
-// })
 
 router.route('/:name').delete(async (req, res) => {
   try {
