@@ -9,12 +9,11 @@ router.route('/').get((_req, res) => {
 })
 
 router.route('/get-qty/:name/:taste').get((req, res) => {
-  const name = req.params.name
-  const taste = req.params.taste
+  const name = req.params.name.toLowerCase()
+  const taste = req.params.taste.toLowerCase()
     Own.findOne(
       { name: name, taste: taste },
       function (err, own) {
-        console.log(own)
         if (err) {
           res.status(400).json('Error: ' + err)
         }
@@ -26,9 +25,16 @@ router.route('/get-qty/:name/:taste').get((req, res) => {
     )
 })
 
+router.route('/count/:name').get((req, res) => {
+  const name = req.params.name.toLowerCase()
+  Dorayaki.countDocuments({name: name})
+    .then(count => res.json(count))
+    .catch(err => res.status(400).json('Error: ' + err))
+})
+
 router.route('/add').post((req, res) => {
-  const name = req.body.name
-  const taste = req.body.taste
+  const name = req.body.name.toLowerCase()
+  const taste = req.body.taste.toLowerCase()
   const qty = req.body.qty
 
   Own.countDocuments({name: name, taste: taste}, function(_err, count) {
@@ -61,8 +67,8 @@ router.route('/add').post((req, res) => {
 })
 
 router.route('/substract').post((req, res) => {
-  const name = req.body.name
-  const taste = req.body.taste
+  const name = req.body.name.toLowerCase()
+  const taste = req.body.taste.toLowerCase()
   const qty = req.body.qty
 
   Own.findOneAndUpdate(
@@ -81,7 +87,7 @@ router.route('/substract').post((req, res) => {
 })
 
 router.route('/:name').get((req, res) => {
-  const name = req.params.name
+  const name = req.params.name.toLowerCase()
   
   Own.find({name: name})
     .then(own => res.json(own))
@@ -89,60 +95,88 @@ router.route('/:name').get((req, res) => {
 })
 
 router.route('/move').post((req, res) => {
-  const from = req.body.from
-  const to = req.body.to
-  const taste = req.body.taste
-  const qtyFrom = req.body.qtyFrom
-  const qtyTo = req.body.qtyTo
+  try {
+    const from = req.body.from.toLowerCase()
+    const to = req.body.to.toLowerCase()
+    const taste = req.body.taste.toLowerCase()
+    const qtyFrom = req.body.qtyFrom
+    const qtyTo = req.body.qtyTo
 
-  Own.findOneAndUpdate(
-    { name: from, taste: taste },
-    { '$set': { qty: Number(qtyFrom) } },
-    { useFindAndModify: false },
-    function(err, _msg) {
-      if (err) {
-        res.status(400).json('Error when reducing: ' + err)
-      }
-      else {
-        res.json('Quantity from ' + from + ' reduced')
+    if (qtyFrom === 0) {
+      Own.find({name: from, taste: taste}).deleteMany()
+        .catch((err) => res.status(400).json('Error when deleting From own: ' + err))
+    }
+    else {
+      Own.findOneAndUpdate(
+        { name: from, taste: taste },
+        { '$set': { qty: Number(qtyFrom) } },
+        { useFindAndModify: false },
+        function(err, _msg) {
+          if (err) {
+            res.status(400).json('Error when reducing: ' + err)
+          }
+        }
+      )
+    }
+
+    if (qtyTo === 0) {
+      try {
+        Own.find({name: to, taste: taste}).deleteMany()
+          .catch((err) => res.status(404).json('Error when deleting To own: ' + err))
+      } catch (err) {
+        console.error(err)
       }
     }
-  )
-
-  Own.countDocuments(
-    { name: to, taste: taste },
-    function(_err, count) {
-      if (count > 0) {
-        Own.findOneAndUpdate(
+    else {
+      try {
+        Own.countDocuments(
           { name: to, taste: taste },
-          { '$set': { qty: Number(qtyTo) } },
-          { useFindAndModify: false },
-          function(err, _msg) {
-            if (err) {
-              res.status(400).json('Error when adding: ' + err)
+          async function(_err, count) {
+            try {
+              if (count > 0) {
+                await Own.findOneAndUpdate(
+                  { name: to, taste: taste },
+                  { '$set': { qty: Number(qtyTo) } },
+                  { useFindAndModify: false },
+                  function(err, _msg) {
+                    if (err) {
+                      res.status(400).json('Error when adding: ' + err)
+                    }
+                  }
+                )
+              }
+              else {
+                const own = new Own({
+                  name: to,
+                  taste,
+                  qty: qtyTo
+                })
+              
+                own.save()
+                  .catch(err => res.status(404).json('Error when creating new own: ' + err))
+              }
+            } catch(err) {
+              console.error(err)
             }
           }
         )
-      }
-      else {
-        const own = new Own({
-          name: to,
-          taste,
-          qty: qtyTo
-        })
-      
-        own.save()
-          .then(() => res.json('New own added!'))
-          .catch(err => res.status(400).json('Error when creating new own: ' + err))
+
+      } catch (err) {
+        console.error(err)
       }
     }
-  )
+  } catch (err) {
+    console.error("Error all: " + err)
+  }
+  
 })
 
-router.route('/:id').delete((req, res) => {
-  Own.findByIdAndDelete(req.params.id)
+router.route('/:name/:taste').delete((req, res) => {
+  const name = req.params.name.toLowerCase()
+  const taste = req.params.taste.toLowerCase()
+  Own.find({name: name, taste: taste}).deleteMany()
     .then(() => res.json('Own deleted.'))
-    .catch(err => res.status(400).json('Error: ' + err))
+    .catch(err => ('Error: ' + err))
 })
 
 router.route('/update/:id').post((req, res) => {

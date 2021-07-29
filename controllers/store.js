@@ -9,10 +9,10 @@ router.route('/').get((_req, res) => {
 })
 
 router.route('/add').post((req, res) => {
-  const name = req.body.name
-  const address = req.body.address
-  const subdistrict = req.body.subdistrict
-  const province = req.body.province
+  const name = req.body.name.toLowerCase()
+  const address = req.body.address.toLowerCase()
+  const subdistrict = req.body.subdistrict.toLowerCase()
+  const province = req.body.province.toLowerCase()
 
   const store = new Store({
     name,
@@ -27,7 +27,7 @@ router.route('/add').post((req, res) => {
 })
 
 router.route('/:name').get((req, res) => {
-  const name = req.params.name
+  const name = req.params.name.toLowerCase()
   Store.find({name: name})
     .then(store => res.json(store))
     .catch(err => res.status(400).json('Error: ' + err))
@@ -35,7 +35,7 @@ router.route('/:name').get((req, res) => {
 
 router.route('/:name').delete(async (req, res) => {
   try {
-    const name = req.params.name
+    const name = req.params.name.toLowerCase()
     await Store.find({name: name}).deleteOne()
       .then(() => res.json('Store deleted.'))
       .catch(err => ('Error when deleting store: ' + err))
