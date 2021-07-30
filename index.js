@@ -1,6 +1,7 @@
 const express = require('express')
 const cors = require('cors')
 const mongoose = require('mongoose')
+const MongoClient = require('mongodb').MongoClient
 
 require('dotenv').config()
 
@@ -10,7 +11,7 @@ const port = process.env.PORT
 app.use(cors())
 app.use(express.json())
 
-const uri = process.env.ATLAS_URI
+const uri = process.env.MONGODB_URI
 mongoose.connect(uri, { useNewUrlParser: true, useCreateIndex: true, useUnifiedTopology: true })
 
 const connection = mongoose.connection

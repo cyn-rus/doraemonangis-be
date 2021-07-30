@@ -44,4 +44,14 @@ router.route('/:id').delete((req, res) => {
     .catch(err => res.status(400).json('Error: ' + err))
 })
 
+router.route('/update/:id').post((req, res) => {
+  Dorayaki.findById(req.params.id)
+    .then(dorayaki => {
+      dorayaki.taste = req.body.taste
+      dorayaki.description = req.body.description
+      dorayaki.image = req.body.image
+    })
+    .catch(err => res.status(400).json('Error: ' + err))
+})
+
 module.exports = router

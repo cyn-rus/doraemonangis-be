@@ -1,0 +1,35 @@
+version: '3'
+services:
+  mongodb:
+    image: mongo
+    environment:
+      - MONGO_INITDB_USERNAME=admin
+      - MONGO_INITDB_PASSWORD=doraemonangis
+    ports:
+      - 27017:27017
+    networks:
+      - net
+
+  express:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 8081:5000
+    networks:
+      - net
+    env_file: .env
+    environment:
+      - MONGO_URI=$MONGODB_URI
+    depends_on:
+      - mongodb
+    volumes: 
+      - .:/home/node/app
+      - node_modules:/home/node/app/node_modules
+
+networks:
+  net:
+    driver: bridge
+
+volumes:
+  node_modules:
