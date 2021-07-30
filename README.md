@@ -10,11 +10,10 @@
 ```sh
 git clone https://github.com/cyn-rus/doraemonangis-be.git
 ```
-2. Install semua dependencies
+2. Jalankan Docker
 ```sh
-npm i
+docker-compose up --build -d
 ```
-3. Jalankan `nodemon main` (pastikan sudah `npm i -g nodemon`)
 
 ## Fitur
 Fitur tersedia:
